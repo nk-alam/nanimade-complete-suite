@@ -23,22 +23,39 @@ class NaniMade_Elementor_Integration {
     
     public function register_widgets() {
         // Load widget files
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/pickle-jar-customizer.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/recipe-story-widget.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/taste-profile-selector.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/smart-product-gallery.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/mobile-menu-pro.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/sidebar-cart-widget.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/trust-signals-widget.php';
+        $widget_files = array(
+            'pickle-jar-customizer.php',
+            'recipe-story-widget.php',
+            'taste-profile-selector.php',
+            'smart-product-gallery.php',
+            'mobile-menu-pro.php',
+            'sidebar-cart-widget.php',
+            'trust-signals-widget.php'
+        );
+        
+        foreach ($widget_files as $file) {
+            $file_path = NANIMADE_SUITE_PLUGIN_PATH . 'elementor-widgets/' . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+            }
+        }
         
         // Register widgets
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Pickle_Jar_Customizer());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Recipe_Story_Widget());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Taste_Profile_Selector());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Smart_Product_Gallery());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Mobile_Menu_Pro());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Sidebar_Cart_Widget());
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new NaniMade_Trust_Signals_Widget());
+        $widget_classes = array(
+            'NaniMade_Pickle_Jar_Customizer',
+            'NaniMade_Recipe_Story_Widget',
+            'NaniMade_Taste_Profile_Selector',
+            'NaniMade_Smart_Product_Gallery',
+            'NaniMade_Mobile_Menu_Pro',
+            'NaniMade_Sidebar_Cart_Widget',
+            'NaniMade_Trust_Signals_Widget'
+        );
+        
+        foreach ($widget_classes as $widget_class) {
+            if (class_exists($widget_class)) {
+                \Elementor\Plugin::instance()->widgets_manager->register_widget_type(new $widget_class());
+            }
+        }
     }
     
     public function enqueue_elementor_styles() {

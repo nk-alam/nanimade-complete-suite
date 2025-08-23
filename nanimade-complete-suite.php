@@ -43,6 +43,11 @@ class NaniMade_Complete_Suite {
     }
     
     public function init() {
+        // Check if required functions exist
+        if (!function_exists('wp_create_nonce')) {
+            return;
+        }
+        
         // Load core classes
         $this->load_dependencies();
         
@@ -73,30 +78,47 @@ class NaniMade_Complete_Suite {
     }
     
     private function load_dependencies() {
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-mobile-menu.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-sidebar-cart.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-pwa-manager.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-analytics.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-elementor-integration.php';
-        require_once NANIMADE_SUITE_PLUGIN_PATH . 'includes/class-pickle-customizer.php';
+        $files = array(
+            'includes/class-mobile-menu.php',
+            'includes/class-sidebar-cart.php',
+            'includes/class-pwa-manager.php',
+            'includes/class-analytics.php',
+            'includes/class-elementor-integration.php',
+            'includes/class-pickle-customizer.php'
+        );
+        
+        foreach ($files as $file) {
+            $file_path = NANIMADE_SUITE_PLUGIN_PATH . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+            }
+        }
     }
     
     private function init_mobile_menu() {
-        new NaniMade_Mobile_Menu();
+        if (class_exists('NaniMade_Mobile_Menu')) {
+            new NaniMade_Mobile_Menu();
+        }
     }
     
     private function init_elementor_widgets() {
         if (did_action('elementor/loaded')) {
-            new NaniMade_Elementor_Integration();
+            if (class_exists('NaniMade_Elementor_Integration')) {
+                new NaniMade_Elementor_Integration();
+            }
         }
     }
     
     private function init_pwa_features() {
-        new NaniMade_PWA_Manager();
+        if (class_exists('NaniMade_PWA_Manager')) {
+            new NaniMade_PWA_Manager();
+        }
     }
     
     private function init_analytics() {
-        new NaniMade_Analytics();
+        if (class_exists('NaniMade_Analytics')) {
+            new NaniMade_Analytics();
+        }
     }
     
     public function enqueue_scripts() {
@@ -163,10 +185,11 @@ class NaniMade_Complete_Suite {
         wp_localize_script('nanimade-suite-js', 'nanimade_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('nanimade_nonce'),
-            'cart_url' => wc_get_cart_url(),
-            'checkout_url' => wc_get_checkout_url(),
-            'currency_symbol' => get_woocommerce_currency_symbol(),
-            'cart_count' => WC()->cart ? WC()->cart->get_cart_contents_count() : 0,
+            'plugin_url' => NANIMADE_SUITE_PLUGIN_URL,
+            'cart_url' => class_exists('WooCommerce') ? wc_get_cart_url() : '',
+            'checkout_url' => class_exists('WooCommerce') ? wc_get_checkout_url() : '',
+            'currency_symbol' => class_exists('WooCommerce') ? get_woocommerce_currency_symbol() : '₹',
+            'cart_count' => (class_exists('WooCommerce') && WC()->cart) ? WC()->cart->get_cart_contents_count() : 0,
             'strings' => array(
                 'added_to_cart' => __('Added to cart!', 'nanimade-suite'),
                 'cart_updated' => __('Cart updated!', 'nanimade-suite'),
@@ -217,6 +240,11 @@ class NaniMade_Complete_Suite {
     public function ajax_add_to_cart() {
         check_ajax_referer('nanimade_nonce', 'nonce');
         
+        if (!class_exists('WooCommerce') || !WC()->cart) {
+            wp_send_json_error(array('message' => 'WooCommerce not available'));
+            return;
+        }
+        
         $product_id = intval($_POST['product_id']);
         $quantity = intval($_POST['quantity']);
         $variation_id = isset($_POST['variation_id']) ? intval($_POST['variation_id']) : 0;
@@ -244,6 +272,11 @@ class NaniMade_Complete_Suite {
     public function ajax_update_cart() {
         check_ajax_referer('nanimade_nonce', 'nonce');
         
+        if (!class_exists('WooCommerce') || !WC()->cart) {
+            wp_send_json_error(array('message' => 'WooCommerce not available'));
+            return;
+        }
+        
         $cart_item_key = sanitize_text_field($_POST['cart_item_key']);
         $quantity = intval($_POST['quantity']);
         
@@ -262,7 +295,10 @@ class NaniMade_Complete_Suite {
     
     private function get_cart_html() {
         ob_start();
-        include NANIMADE_SUITE_PLUGIN_PATH . 'templates/cart/sidebar-cart-content.php';
+        $template_path = NANIMADE_SUITE_PLUGIN_PATH . 'templates/cart/sidebar-cart-content.php';
+        if (file_exists($template_path)) {
+            include $template_path;
+        }
         return ob_get_clean();
     }
     

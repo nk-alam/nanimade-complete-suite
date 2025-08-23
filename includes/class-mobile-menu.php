@@ -110,7 +110,7 @@ class NaniMade_Mobile_Menu {
                         <i class="fas fa-shopping-cart"></i>
                         <?php _e('View Cart', 'nanimade-suite'); ?>
                     </a>
-                    <a href="<?php echo wc_get_checkout_url(); ?>" class="nanimade-btn nanimade-btn-primary">
+                    <a href="<?php echo class_exists('WooCommerce') ? wc_get_checkout_url() : '#'; ?>" class="nanimade-btn nanimade-btn-primary">
                         <i class="fas fa-credit-card"></i>
                         <?php _e('Checkout', 'nanimade-suite'); ?>
                     </a>
@@ -168,9 +168,9 @@ class NaniMade_Mobile_Menu {
                         <?php
                         $thumbnail = $product->get_image('thumbnail');
                         if ($product_permalink) {
-                            echo '<a href="' . esc_url($product_permalink) . '">' . $thumbnail . '</a>';
+                            echo '<a href="' . esc_url($product_permalink) . '">' . wp_kses_post($thumbnail) . '</a>';
                         } else {
-                            echo $thumbnail;
+                            echo wp_kses_post($thumbnail);
                         }
                         ?>
                         
@@ -282,7 +282,7 @@ class NaniMade_Mobile_Menu {
                 'key' => 'shop',
                 'label' => __('Pickles', 'nanimade-suite'),
                 'icon' => 'fas fa-pepper-hot',
-                'url' => get_permalink(wc_get_page_id('shop')),
+                'url' => class_exists('WooCommerce') ? get_permalink(wc_get_page_id('shop')) : home_url('/shop/'),
                 'badge' => false,
             ),
             array(
@@ -303,7 +303,7 @@ class NaniMade_Mobile_Menu {
                 'key' => 'account',
                 'label' => __('Account', 'nanimade-suite'),
                 'icon' => 'fas fa-user-circle',
-                'url' => get_permalink(wc_get_page_id('myaccount')),
+                'url' => class_exists('WooCommerce') ? get_permalink(wc_get_page_id('myaccount')) : home_url('/my-account/'),
                 'badge' => false,
             ),
         );
